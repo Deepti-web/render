@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo</title>
+    <style>
+        .thumbnail {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            transition: border 0.2s;
+        }
+        .thumbnail:hover {
+            border: 2px solid #333;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+        .modal-content {
+            display: block;
+            margin: 5% auto;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        .close {
+            position: absolute;
+            top: 20px; right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    {% for photo in photos %}
+        <img src="data:image/jpeg;base64,{{ photo.image_data }}" alt="{{ photo.filename }}" class="thumbnail" onclick="showModal(this)">
+        <a href="{{ url_for('download_image', image_id=photo.id) }}">Download Image</a>
+    {% endfor %}
+
+    <!-- Modal for full-size image -->
+<div id="imgModal" class="modal">
+        <span class="close" id="closeBtn">&times;</span>
+        <img class="modal-content" id="modalImg">
+    </div>
+
+    <script>
+        function showModal(img) {
+            var modal = document.getElementById("imgModal");
+            var modalImg = document.getElementById("modalImg");
+            modal.style.display = "block";
+            modalImg.src = img.src;
+        }
+
+        // Close modal when clicking the close button
+        document.getElementById("closeBtn").onclick = function(event) {
+            document.getElementById("imgModal").style.display = "none";
+        }
+
+        // Close modal when clicking outside the image
+        document.getElementById("imgModal").onclick = function(event) {
+            if (event.target === this) {
+                this.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
