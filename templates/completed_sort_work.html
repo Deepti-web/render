@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sort Statements</title>
+    <style>
+        /* General page setup */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar a button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .navbar a button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        /* Main container */
+        .container {
+            background: white;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Task list text */
+        .container p {
+            background-color: #f2f2f2;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #333;
+            text-align: left;
+        }
+
+        /* Add task floating button */
+        .add-task-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        .add-task-btn button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0px 3px 8px rgba(0,0,0,0.2);
+        }
+
+        .add-task-btn button:hover {
+            background-color: #218838;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .navbar {
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .navbar a button {
+                width: 80%;
+                font-size: 16px;
+                padding: 10px;
+            }
+
+            .container {
+                width: 90%;
+                padding: 15px;
+                margin: 30px auto;
+            }
+
+            .container p {
+                font-size: 15px;
+                padding: 10px;
+            }
+
+            .add-task-btn {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .add-task-btn button {
+                width: 100px;
+                height: 45px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <a href="{{ url_for('sort_tasks') }}">
+            <button type="button">Back</button>
+        </a>
+
+        <a href="{{ url_for('clear_complete_sort_tasks') }}">
+            <button type="button" onclick="return confirm('Are you sure you want to clear all tasks?')">Clear Space</button>
+        </a>
+    </div>
+
+    <!-- Task container -->
+    <div class="container">
+        <form method="POST" action="">
+            {% for statement in statements %}
+                <p>{{ statement.name }}</p>
+            {% endfor %}
+        </form>
+    </div>
+
+    <!-- Add Task Floating Button -->
+    <div class="add-task-btn">
+        <a href="{{ url_for('add_sort_tasks') }}">
+            <button type="button">Add Task</button>
+        </a>
+    </div>
+</body>
+</html>

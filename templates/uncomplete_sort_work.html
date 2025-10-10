@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sort Statements</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .navbar a button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .navbar a button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            padding: 20px;
+            max-width: 500px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Centered delete button */
+        .delete-btn {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .delete-btn button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .delete-btn button:hover {
+            background-color: #b02a37;
+        }
+
+        /* Task list */
+        ul.statement-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul.statement-list li {
+            display: flex;
+            align-items: center;
+            background: #f2f2f2;
+            margin: 6px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        label {
+            margin-left: 8px;
+            flex-grow: 1;
+            word-break: break-word;
+        }
+
+        /* Floating Add Task button */
+        .add-task-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        .add-task-btn button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .add-task-btn button:hover {
+            background-color: #218838;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .navbar a {
+                width: 100%;
+                margin: 4px 0;
+            }
+
+            .navbar a button {
+                width: 100%;
+                font-size: 16px;
+                padding: 10px;
+            }
+
+            .container {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .delete-btn button {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            ul.statement-list li {
+                flex-direction: row;
+                align-items: center;
+                padding: 12px;
+                font-size: 15px;
+            }
+
+            .add-task-btn {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .add-task-btn button {
+                width: 100px;
+                height: 45px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('Uncomplete_tasks') }}">
+            <button type="button">Back</button>
+        </a>
+        <a href="{{ url_for('complete_sort_tasks') }}">
+            <button type="button">Completed</button>
+        </a>
+    </div>
+
+    <div class="container">
+        <form method="POST" action="">
+            <div class="delete-btn">
+                <button type="submit" onclick="alert('Are you sure want to mark complete!')">Mark Complete</button>
+            </div>
+            <ul class="statement-list">
+                {% for statement in statements %}
+                <li>
+                    <input type="checkbox" name="delete_checkbox" value="{{ statement.id }}">
+                    <label>{{ statement.name }}</label>
+                </li>
+                {% endfor %}
+            </ul>
+        </form>
+    </div>
+
+    <div class="add-task-btn">
+        <a href="{{ url_for('add_sort_tasks') }}">
+            <button type="button">Add Task</button>
+        </a>
+    </div>
+</body>
+</html>

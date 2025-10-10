@@ -129,7 +129,7 @@ def login():
 @app.route("/tasks", methods=["GET", "POST"])
 def Uncomplete_tasks():
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
     
     q = (request.args.get("q") or "").strip()
     if q:
@@ -161,7 +161,7 @@ def Uncomplete_tasks():
 @app.route("/tasks/<int:task_id>")
 def mark_complete_task(task_id):
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
     cur.execute("UPDATE todo_tasks SET is_completed=%s, status=%s, complete_date=%s WHERE task_id=%s",("True", "Complete", current_date, task_id))
@@ -173,7 +173,7 @@ def mark_complete_task(task_id):
 @app.route("/tasks/completed", methods=['GET', 'POST'])
 def completed_tasks():
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True,  buffered=True)
     cur.execute("SELECT * FROM todo_tasks WHERE is_completed = %s",("True",))
@@ -185,7 +185,7 @@ def completed_tasks():
 @app.route("/task/view-details/<int:task_id>")
 def view_task_details(task_id):
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True, buffered=True)  # added buffered=True
     cur.execute("SELECT * FROM todo_tasks WHERE task_id = %s", (task_id,))
@@ -197,7 +197,7 @@ def view_task_details(task_id):
 @app.route("/tasks/add-task", methods=['GET', 'POST'])
 def add_task():
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
     if request.method == "POST":
         now = datetime.now()
         dt_obj = now.strftime("%d-%m-%Y %H:%M")
@@ -231,7 +231,7 @@ def add_task():
 @app.route("/tasks/completed-tasks/clear-all")
 def clear_completed_tasks():
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/")
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
     cur.execute("DELETE FROM todo_tasks WHERE is_completed=%s",("True",))
@@ -240,11 +240,75 @@ def clear_completed_tasks():
     conn.close()
     return redirect(url_for("completed_tasks"))
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
+
+@app.route('/tasks/sort-tasks', methods=['GET', 'POST'])
+def sort_tasks():
+    if "user_id" not in session:
+        return redirect("/")
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    if request.method == 'POST':
+        # Get checked statement IDs from the submitted form
+        ids_to_delete = [int(i) for i in request.form.getlist('delete_checkbox')]
+        print(ids_to_delete)
+        if ids_to_delete:
+            format_strings = ','.join(['%s'] * len(ids_to_delete))
+            print(format_strings)
+            # Uncomment when ready to delete:
+            cur.execute(f"UPDATE sort_task SET complete = 'True' WHERE id IN ({format_strings})", tuple(ids_to_delete))
+            conn.commit()
+            return redirect("/tasks/sort-tasks")
+    
+    cur.execute("SELECT id,name FROM sort_task WHERE complete=%s",("False",))
+    statements = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('uncomplete_sort_work.html', statements=statements)
+
+@app.route('/tasks/add-sort-tasks', methods=['GET', 'POST'])
+def add_sort_tasks():
+    if "user_id" not in session:
+        return redirect("/")
+    if request.method == 'POST':
+        task_name = request.form["task_name"]
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("INSERT INTO sort_task(name, add_dt) VALUES (%s, %s)",(task_name, current_date))
+        conn.commit()
+        cur.close()
+        conn.close()
+    return render_template('add_sort_work.html')
+
+@app.route("/tasks/completed-sort-work", methods=['GET', 'POST'])
+def complete_sort_tasks():
+    if "user_id" not in session:
+        return redirect("/")
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True,  buffered=True)
+    cur.execute("SELECT * FROM sort_task WHERE complete = %s",("True",))
+    statements = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template("completed_sort_work.html", statements = statements)
+
+@app.route("/tasks/completed-sort-tasks/clear-all-sort-tasks")
+def clear_complete_sort_tasks():
+    if "user_id" not in session:
+        return redirect("/")
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("DELETE FROM sort_task WHERE complete=%s",("True",))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect("/tasks/completed-sort-tasks/clear-all-sort-tasks")
 #----------------ROUTS END----------------------------
 
 # ---------------- SCHEDULER CONFIG ----------------
