@@ -1,19 +1,17 @@
 import os
 from flask import Flask, render_template, request, redirect, session, url_for
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import mysql.connector
-from flask_apscheduler import APScheduler
-import mysql.connector
-import smtplib
-from email.mime.text import MIMEText
-from datetime import datetime, timedelta
+import pytz  # Add this import
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret')
 
+# Define India timezone
+IST = pytz.timezone('Asia/Kolkata')
 
 #----------------DATABASE CONNECTION-----------------------------
 
@@ -36,68 +34,27 @@ def get_db_connection():
         port=int(port),
         ssl_ca=ssl_ca
     )
-#-----------------current date----------------------
 
-now_date = datetime.now()
-current_date = now_date.strftime("%d-%m-%Y %H:%M")
+#-----------------current date (India timezone)----------------------
+
+def get_current_ist_time():
+    """Returns current time in IST timezone"""
+    return datetime.now(IST)
+
+def format_ist_time(dt):
+    """Format datetime to string in IST"""
+    if dt.tzinfo is None:
+        dt = IST.localize(dt)
+    return dt.strftime("%d-%m-%Y %H:%M")
+
+# Update current_date to use IST
+now_date = get_current_ist_time()
+current_date = format_ist_time(now_date)
 
 #----------------EMAIL-----------------------------
-def send_email(subject, body):
-    sender = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASSWORD")
-    receiver = os.getenv("RECIVER_EMAIL")
-    msg = MIMEText(body, "plain")
-    msg["Subject"] = subject
-    msg["From"] = sender
-    msg["To"] = receiver
-
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(sender, password)
-            server.sendmail(sender, receiver, msg.as_string())
-        print(f"✅ Email sent to {receiver}")
-    except Exception as e:
-        print("❌ Email error:", e)
 
 
 # ---------------- REMINDER JOB ----------------
-def reminder_job():
-    now = datetime.now()
-    now_str = now.strftime("%Y-%m-%d %H:%M")
-    recent_date_time = datetime.strptime(now_str, "%Y-%m-%d %H:%M")
-
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    now = datetime.now()
-
-    query = """
-        SELECT * FROM todo_tasks
-        WHERE is_completed = False AND due_date > %s
-    """
-    cursor.execute(query, (recent_date_time,))
-    tasks = cursor.fetchall()
-
-    for task in tasks:
-        last_reminded = task["last_reminded"]
-        interval_time = task["notify_me_in"]
-        remind_due = (last_reminded is None or recent_date_time >= last_reminded + timedelta(hours=interval_time))
-
-        if remind_due:
-            send_email(
-                subject=f"Reminder: {task['task_name']}",
-                body=f"Task '{task['task_name']}' is still pending.\nDue: {task['due_date']}"
-            )
-
-            # Update last_reminded in DB
-            update_q = "UPDATE todo_tasks SET last_reminded=%s WHERE task_id=%s"
-            cursor.execute(update_q, (recent_date_time, task["task_id"]))
-            conn.commit()
-
-    cursor.close()
-    conn.close()
-
 
 #-----------------USER CHECK--------------------------
 
@@ -162,9 +119,14 @@ def Uncomplete_tasks():
 def mark_complete_task(task_id):
     if "user_id" not in session:
         return redirect("/")
+    
+    # Get current IST time for completion
+    current_ist_date = format_ist_time(get_current_ist_time())
+    
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute("UPDATE todo_tasks SET is_completed=%s, status=%s, complete_date=%s WHERE task_id=%s",("True", "Complete", current_date, task_id))
+    cur.execute("UPDATE todo_tasks SET is_completed=%s, status=%s, complete_date=%s WHERE task_id=%s",
+                ("True", "Complete", current_ist_date, task_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -187,7 +149,7 @@ def view_task_details(task_id):
     if "user_id" not in session:
         return redirect("/")
     conn = get_db_connection()
-    cur = conn.cursor(dictionary=True, buffered=True)  # added buffered=True
+    cur = conn.cursor(dictionary=True, buffered=True)
     cur.execute("SELECT * FROM todo_tasks WHERE task_id = %s", (task_id,))
     details = cur.fetchone()
     cur.close()
@@ -199,8 +161,10 @@ def add_task():
     if "user_id" not in session:
         return redirect("/")
     if request.method == "POST":
-        now = datetime.now()
-        dt_obj = now.strftime("%d-%m-%Y %H:%M")
+        # Use IST time
+        now = get_current_ist_time()
+        current_ist_date = format_ist_time(now)
+        
         task_for = request.form["task_for"]
         task_name = request.form["task_name"]
         task_description = request.form["task_description"]
@@ -210,22 +174,22 @@ def add_task():
 
         html_date = f"{d_date} {d_time}"
 
-        dt_obj1 = datetime.strptime(html_date, "%Y-%m-%d %H:%M")
-        due_date2 = dt_obj1.strftime("%d-%m-%Y %H:%M")
-
+        # Parse the date and make it timezone-aware (IST)
         dt_obj = datetime.strptime(html_date, "%Y-%m-%d %H:%M")
-
-        due_date = dt_obj.strftime("%Y-%m-%d %H:%M")
-
+        dt_obj_ist = IST.localize(dt_obj)
         
+        due_date2 = dt_obj_ist.strftime("%d-%m-%Y %H:%M")
+        due_date = dt_obj_ist.strftime("%Y-%m-%d %H:%M")
+
         conn = get_db_connection()
         cur = conn.cursor(dictionary=True)
         cur.execute("INSERT INTO todo_tasks(task_for, task_name, task_description, created_at, due_date, due_date2, notify_me_in) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (task_for, task_name, task_description, current_date, due_date, due_date2, notify_me_in))
+            (task_for, task_name, task_description, current_ist_date, due_date, due_date2, notify_me_in))
 
         conn.commit()
         cur.close()
         conn.close()
+        return redirect(url_for('Uncomplete_tasks'))
     return render_template("add_task.html")
 
 @app.route("/tasks/completed-tasks/clear-all")
@@ -255,13 +219,11 @@ def sort_tasks():
     cur = conn.cursor(dictionary=True)
     
     if request.method == 'POST':
-        # Get checked statement IDs from the submitted form
         ids_to_delete = [int(i) for i in request.form.getlist('delete_checkbox')]
         print(ids_to_delete)
         if ids_to_delete:
             format_strings = ','.join(['%s'] * len(ids_to_delete))
             print(format_strings)
-            # Uncomment when ready to delete:
             cur.execute(f"UPDATE sort_task SET complete = 'True' WHERE id IN ({format_strings})", tuple(ids_to_delete))
             conn.commit()
             return redirect("/tasks/sort-tasks")
@@ -278,12 +240,16 @@ def add_sort_tasks():
         return redirect("/")
     if request.method == 'POST':
         task_name = request.form["task_name"]
+        # Use IST time
+        current_ist_date = format_ist_time(get_current_ist_time())
+        
         conn = get_db_connection()
         cur = conn.cursor(dictionary=True)
-        cur.execute("INSERT INTO sort_task(name, add_dt) VALUES (%s, %s)",(task_name, current_date))
+        cur.execute("INSERT INTO sort_task(name, add_dt) VALUES (%s, %s)",(task_name, current_ist_date))
         conn.commit()
         cur.close()
         conn.close()
+        return redirect(url_for('sort_tasks'))
     return render_template('add_sort_work.html')
 
 @app.route("/tasks/completed-sort-work", methods=['GET', 'POST'])
@@ -309,22 +275,9 @@ def clear_complete_sort_tasks():
     cur.close()
     conn.close()
     return redirect("/tasks/completed-sort-tasks/clear-all-sort-tasks")
+
 #----------------ROUTS END----------------------------
 
 # ---------------- SCHEDULER CONFIG ----------------
-class Config:
-    SCHEDULER_API_ENABLED = True
-
-app.config.from_object(Config())
-scheduler = APScheduler()
-scheduler.init_app(app)
-
-scheduler.add_job(
-    id="task_reminder",
-    func=reminder_job,
-    trigger="interval",
-    hours=1
-)
-scheduler.start()
 if __name__ == '__main__':
     app.run()
