@@ -278,4 +278,6 @@ def clear_complete_sort_tasks():
 
 #----------------ROUTS END----------------------------
 
-# ---------------- SCHEDULER CONFIG ----------------
+# ---------------- SCHEDULER CONFIG --------
+if __name__ == '__main__':
+    app.run(debug=True)
