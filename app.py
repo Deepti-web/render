@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import mysql.connector
 import pytz  # Add this import
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
@@ -275,6 +278,41 @@ def clear_complete_sort_tasks():
     cur.close()
     conn.close()
     return redirect("/tasks/completed-sort-tasks/clear-all-sort-tasks")
+
+@app.route("/send-mail",methods=['GET', 'POST'])
+def send_mail():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT name FROM sort_task WHERE complete = %s",("False",))
+    tasks = cur.fetchall()
+    cur.close()
+    conn.close()
+    my_list = []
+    my_list = [task['name'] for task in tasks]
+    sender_email = os.getenv("EMAIL_USER")
+    receiver_email = os.getenv("RECIVER_EMAIL")
+    password = os.getenv("EMAIL_PASSWORD")
+
+    # List to send
+    # my_list = ["item 1", "item 2", "item 3", "item 4"]
+    body = "\n".join(my_list)
+
+    # Create the email message
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "List in Email Body"
+
+    # Attach the list as plain text
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Set up the SMTP server and send the email
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(sender_email, password)
+    text = msg.as_string()
+    server.sendmail(sender_email, receiver_email, text)
+    server.quit()
 
 #----------------ROUTS END----------------------------
 
