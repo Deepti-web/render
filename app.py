@@ -289,30 +289,35 @@ def send_mail():
     conn.close()
     my_list = []
     my_list = [task['name'] for task in tasks]
+
     sender_email = os.getenv("EMAIL_USER")
     receiver_email = os.getenv("RECIVER_EMAIL")
     password = os.getenv("EMAIL_PASSWORD")
-
-    # List to send
-    # my_list = ["item 1", "item 2", "item 3", "item 4"]
     body = "\n".join(my_list)
 
+    # print(sender_email, receiver_email, password, body)
     # Create the email message
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = receiver_email
-    msg['Subject'] = "List in Email Body"
+    msg['Subject'] = "!Pending work to complete"
 
     # Attach the list as plain text
     msg.attach(MIMEText(body, 'plain'))
 
     # Set up the SMTP server and send the email
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(sender_email, password)
-    text = msg.as_string()
-    server.sendmail(sender_email, receiver_email, text)
-    server.quit()
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, password)
+        text = msg.as_string()
+        server.sendmail(sender_email, receiver_email, text)
+        server.quit()
+        # return "Email sent successfully"
+    except Exception as e:
+        print("Error while sending email:", e)
+        return str(e), 500
+
 
 #----------------ROUTS END----------------------------
 
