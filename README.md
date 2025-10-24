@@ -139,7 +139,7 @@ The system provides a RESTful API for accessing and manipulating task data. Here
 
 👤 Author
 -------
-TaskMaster was created by [Your Name](https://github.com/deeptinirmalya).
+TaskMaster was created by Deeptinirmalya (https://github.com/deeptinirmalya).
 
 📝 License
 -------
