@@ -313,7 +313,7 @@ def send_mail():
         text = msg.as_string()
         server.sendmail(sender_email, receiver_email, text)
         server.quit()
-        # return "Email sent successfully"
+        return "Email sent successfully"
     except Exception as e:
         print("Error while sending email:", e)
         return str(e), 500
