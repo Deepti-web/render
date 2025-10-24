@@ -122,10 +122,10 @@ To test the system, follow these steps:
 -------------
 Here are some screenshots of the system:
 
-* **Login Page**: [![Login Page](https://via.placeholder.com/300x200)](https://via.placeholder.com/300x200)
-* **Task List**: [![Task List](https://via.placeholder.com/300x200)](https://via.placeholder.com/300x200)
-* **Task Details**: [![Task Details](https://via.placeholder.com/300x200)](https://via.placeholder.com/300x200)
-* **Calendar View**: [![Calendar View](https://via.placeholder.com/300x200)](https://via.placeholder.com/300x200)
+* **Login Page**: <img width="658" height="793" alt="Image" src="https://github.com/user-attachments/assets/cdd57cbe-99cf-498a-9a84-dabf1c665c07" />
+* **Task List**: <img width="1904" height="911" alt="Image" src="https://github.com/user-attachments/assets/c8f0e8d6-5d89-4bf0-967c-3f88f145832e" />
+* **Task Details**: <img width="1105" height="694" alt="Image" src="https://github.com/user-attachments/assets/6e21a92b-677a-4fef-97ae-7d99955623cf" />
+* **Add Task**: <img width="789" height="902" alt="Image" src="https://github.com/user-attachments/assets/cbcee986-60cb-4f3f-a5e0-6e34822966ff" />
 
 📦 API Reference
 -------------
