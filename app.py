@@ -303,7 +303,7 @@ def send_mail():
         # Environment variables
         api_key = os.getenv("BREVO_API_KEY")
         sender = os.getenv("EMAIL_USER")
-        receiver = os.getenv("RECEIVER_EMAIL")
+        receiver = os.getenv("EMAIL")
 
         # Safety check
         if not all([api_key, sender, receiver]):
