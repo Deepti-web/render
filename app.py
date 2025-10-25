@@ -284,64 +284,39 @@ def clear_complete_sort_tasks():
 
 @app.route("/send-mail", methods=['GET', 'POST'])
 def send_mail():
-    # Example data (replace this with your DB query results)
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT name FROM sort_task WHERE complete = %s",("False",))
+    tasks = cur.fetchall()
+    cur.close()
+    conn.close()
+    my_list = []
+    my_list = [task['name'] for task in tasks]
+
+    sender_email = os.getenv("EMAIL_USER")
+    receiver_email = os.getenv("RECIVER_EMAIL")
+    password = os.getenv("EMAIL_PASSWORD")
+    body = "\n".join(my_list)
+
+    # print(sender_email, receiver_email, password, body)
+    # Create the email message
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "!Pending work to complete"
+
+    # Attach the list as plain text
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Set up the SMTP server and send the email
     try:
-        # Connect to DB and get all incomplete tasks
-        conn = get_db_connection()
-        cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT name FROM sort_task WHERE complete = %s", ("False",))
-        tasks = cur.fetchall()
-        cur.close()
-        conn.close()
-
-        # Prepare email body
-        if not tasks:
-            body = "No incomplete tasks found."
-        else:
-            task_list = [task['name'] for task in tasks]
-            body = "\n".join(task_list)
-
-        # Environment variables
-        api_key = os.getenv("BREVO_API_KEY")
-        sender = os.getenv("EMAIL_USER")
-        receiver = os.getenv("EMAIL")
-
-        # Safety check
-        if not all([api_key, sender, receiver]):
-            missing = [k for k, v in {
-                "BREVO_API_KEY": api_key,
-                "EMAIL_USER": sender,
-                "RECEIVER_EMAIL": receiver
-            }.items() if not v]
-            return f"Missing environment variable(s): {', '.join(missing)}", 500
-
-        # Prepare the email payload
-        payload = {
-            "sender": {"email": sender},
-            "to": [{"email": receiver}],
-            "subject": "Pending Task List",
-            "textContent": body
-        }
-
-        # Send via Brevo API
-        response = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            headers={
-                "accept": "application/json",
-                "api-key": api_key,
-                "content-type": "application/json"
-            },
-            json=payload
-        )
-
-        # Handle response
-        if response.status_code == 201:
-            return "✅ Email sent successfully!"
-        else:
-            return f"❌ Failed to send: {response.status_code} - {response.text}", 500
-
-    except mysql.connector.Error as err:
-        return f"Database error: {err}", 500
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, password)
+        text = msg.as_string()
+        server.sendmail(sender_email, receiver_email, text)
+        server.quit()
+        # return "Email sent successfully"
     except Exception as e:
         return f"Unexpected error: {e}", 500
 
